@@ -183,25 +183,43 @@ public class MatrixAPI {
     }
 
     /**
+     * Checks whether a notice dialog or server broadcast should be completely suppressed.
+     *
+     * @param noticeText The raw notice message string
+     * @return true if notice should be silently dropped, false otherwise
+     */
+    public static boolean shouldSuppressNotice(String noticeText) {
+        if (noticeText == null || noticeText.trim().length() == 0) {
+            return true;
+        }
+        String lower = noticeText.toLowerCase();
+        return lower.indexOf("nick") >= 0 
+            || lower.indexOf("havan") >= 0 
+            || lower.indexOf("hanhap") >= 0
+            || lower.indexOf("chào mừng") >= 0 
+            || lower.indexOf("welcome") >= 0
+            || lower.indexOf("phần mềm") >= 0 
+            || lower.indexOf("nso.net") >= 0
+            || lower.indexOf("havx") >= 0 
+            || lower.indexOf("vxmm") >= 0
+            || lower.indexOf("zalo") >= 0
+            || lower.indexOf("bot ae") >= 0
+            || lower.indexOf("tone 28") >= 0
+            || lower.indexOf("0377") >= 0
+            || lower.indexOf("top ngày") >= 0
+            || lower.indexOf("đặt vxmm") >= 0;
+    }
+
+    /**
      * Intercepts server notice popups and top banner tickers.
-     * Replaces initial login welcome/advertisement notices with "Time to Hustle!",
-     * while preserving all legitimate in-game global messages (boss spawns, item upgrades, events).
+     * Returns empty string for suppressed ads, or sanitized string for legitimate game alerts.
      *
      * @param noticeText The raw notice message string
      * @return Transformed or sanitized notice string
      */
     public static String transformNoticeText(String noticeText) {
-        if (noticeText == null || noticeText.length() == 0) {
-            return noticeText;
-        }
-        
-        String lower = noticeText.toLowerCase();
-        // Target login welcome messages or legacy mod branding
-        if (lower.indexOf("nick") >= 0 || lower.indexOf("havan") >= 0 
-            || lower.indexOf("chào mừng") >= 0 || lower.indexOf("welcome") >= 0
-            || lower.indexOf("phần mềm") >= 0 || lower.indexOf("nso.net") >= 0) {
-            MatrixLogger.info("⚡ [MatrixCore Login Notice Intercepted]: " + noticeText);
-            return "Time to Hustle!";
+        if (shouldSuppressNotice(noticeText)) {
+            return "";
         }
         
         // Preserve standard game global messages (events, boss spawns, item upgrades)

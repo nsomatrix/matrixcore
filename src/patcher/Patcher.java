@@ -64,9 +64,9 @@ public class Patcher {
             try {
                 CtClass bqClass = pool.get("bq");
                 CtMethod noticeMethod = bqClass.getDeclaredMethod("a", new CtClass[]{ pool.get("java.lang.String") });
-                noticeMethod.insertBefore("{ $1 = mod.MatrixAPI.transformNoticeText($1); }");
+                noticeMethod.insertBefore("if (mod.MatrixAPI.shouldSuppressNotice($1)) { return; } $1 = mod.MatrixAPI.transformNoticeText($1);");
                 bqClass.writeFile(outputPath);
-                System.out.println("[MatrixCore Patcher] Successfully hooked bq.a(String) -> mod.MatrixAPI.transformNoticeText()");
+                System.out.println("[MatrixCore Patcher] Successfully hooked bq.a(String) -> mod.MatrixAPI.shouldSuppressNotice()");
             } catch (Exception bqEx) {
                 System.err.println("[MatrixCore Patcher] Warning: Could not hook bq.a: " + bqEx.getMessage());
             }
@@ -75,9 +75,9 @@ public class Patcher {
             try {
                 CtClass bxClass = pool.get("bx");
                 CtMethod tickerMethod = bxClass.getDeclaredMethod("a", new CtClass[]{ pool.get("java.lang.String"), pool.get("int"), pool.get("fg") });
-                tickerMethod.insertBefore("{ $1 = mod.MatrixAPI.transformNoticeText($1); }");
+                tickerMethod.insertBefore("if (mod.MatrixAPI.shouldSuppressNotice($1)) { return; } $1 = mod.MatrixAPI.transformNoticeText($1);");
                 bxClass.writeFile(outputPath);
-                System.out.println("[MatrixCore Patcher] Successfully hooked bx.a(String, int, fg) -> mod.MatrixAPI.transformNoticeText()");
+                System.out.println("[MatrixCore Patcher] Successfully hooked bx.a(String, int, fg) -> mod.MatrixAPI.shouldSuppressNotice()");
             } catch (Exception bxEx) {
                 System.err.println("[MatrixCore Patcher] Warning: Could not hook bx.a: " + bxEx.getMessage());
             }
