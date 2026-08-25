@@ -383,4 +383,74 @@ public class MatrixAPI {
             }
         }
     }
+
+    /**
+     * Inspects game menu vectors and inserts the "MTXCore" option between "MenuAuto" and "MenuPK".
+     *
+     * @param dhObj The dh (Vector) instance of menu items being opened
+     */
+    public static void injectMTXCoreMenu(Object dhObj) {
+        if (dhObj == null) return;
+        try {
+            java.util.Vector vector = (java.util.Vector) dhObj;
+            if (vector.isEmpty()) return;
+
+            int autoIdx = -1;
+            boolean hasMTX = false;
+
+            for (int i = 0; i < vector.size(); i++) {
+                Object item = vector.elementAt(i);
+                if (item == null) continue;
+
+                Class itemClass = item.getClass();
+                if ("au".equals(itemClass.getName())) {
+                    java.lang.reflect.Field labelField = itemClass.getField("a");
+                    String label = (String) labelField.get(item);
+
+                    if ("MTXCore".equals(label)) {
+                        hasMTX = true;
+                        break;
+                    }
+
+                    java.lang.reflect.Field idField = itemClass.getField("d");
+                    int actionId = idField.getInt(item);
+
+                    // Action ID 86 corresponds to MenuAuto
+                    if (actionId == 86 || (label != null && label.toLowerCase().indexOf("auto") >= 0)) {
+                        autoIdx = i;
+                    }
+                }
+            }
+
+            if (!hasMTX && autoIdx >= 0) {
+                // Get bq.k (bu listener) and au constructor au(String, bu, int, Object)
+                Class bqClass = Class.forName("bq");
+                Object bqK = bqClass.getField("k").get(null);
+
+                Class auClass = Class.forName("au");
+                Class buClass = Class.forName("bu");
+
+                java.lang.reflect.Constructor auConstr = auClass.getConstructor(new Class[]{
+                    String.class, buClass, int.class, Object.class
+                });
+
+                Object mtxItem = auConstr.newInstance(new Object[]{
+                    "MTXCore", bqK, Integer.valueOf(9999), null
+                });
+
+                vector.insertElementAt(mtxItem, autoIdx + 1);
+                MatrixLogger.info("⚡ [MatrixCore] Inserted MTXCore menu option at index " + (autoIdx + 1));
+            }
+        } catch (Throwable t) {
+            MatrixLogger.error("Failed to inject MTXCore menu option", t);
+        }
+    }
+
+    /**
+     * Callback handler when the user selects "MTXCore" in the game menu.
+     */
+    public static void handleMTXCoreMenu() {
+        MatrixLogger.info("⚡ [MatrixCore Menu Clicked]");
+        respond(null, "MTXCore Console v1.0");
+    }
 }

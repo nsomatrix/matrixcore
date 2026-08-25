@@ -118,15 +118,33 @@ public class Patcher {
                 System.err.println("[MatrixCore Patcher] Warning: Could not hook at.c: " + atEx.getMessage());
             }
 
-            // Hook Local Chat Entry Handler (bt.class -> a(String, String))
+            // Hook Local Chat & Action Listener in bt.class
             try {
                 CtClass btClass = pool.get("bt");
+                
+                // Local Chat Commands (bt.a(String, String))
                 CtMethod chatMethod = btClass.getDeclaredMethod("a", new CtClass[]{ pool.get("java.lang.String"), pool.get("java.lang.String") });
                 chatMethod.insertBefore("if (mod.MatrixAPI.handleChatCommand(null, $2)) { return; }");
+
+                // Action Listener (bt.a(int, Object))
+                CtMethod actionMethod = btClass.getDeclaredMethod("a", new CtClass[]{ pool.get("int"), pool.get("java.lang.Object") });
+                actionMethod.insertBefore("if ($1 == 9999) { mod.MatrixAPI.handleMTXCoreMenu(); return; }");
+
                 btClass.writeFile(outputPath);
-                System.out.println("[MatrixCore Patcher] Successfully hooked Local Chat Commands in bt.a(String, String) -> mod.MatrixAPI.handleChatCommand()");
+                System.out.println("[MatrixCore Patcher] Successfully hooked bt.class (Local Chat Commands & MTXCore Action Listener)");
             } catch (Exception btEx) {
-                System.err.println("[MatrixCore Patcher] Warning: Could not hook bt.a: " + btEx.getMessage());
+                System.err.println("[MatrixCore Patcher] Warning: Could not hook bt.class: " + btEx.getMessage());
+            }
+
+            // Hook Popup Menu Builder (cv.class -> a(dh)) for MTXCore Menu Injection
+            try {
+                CtClass cvClass = pool.get("cv");
+                CtMethod showMenuMethod = cvClass.getDeclaredMethod("a", new CtClass[]{ pool.get("dh") });
+                showMenuMethod.insertBefore("mod.MatrixAPI.injectMTXCoreMenu($1);");
+                cvClass.writeFile(outputPath);
+                System.out.println("[MatrixCore Patcher] Successfully hooked cv.a(dh) -> mod.MatrixAPI.injectMTXCoreMenu()");
+            } catch (Exception cvEx) {
+                System.err.println("[MatrixCore Patcher] Warning: Could not hook cv.a(dh): " + cvEx.getMessage());
             }
 
             System.out.println("[MatrixCore Patcher] Bytecode instrumentation completed successfully!");
