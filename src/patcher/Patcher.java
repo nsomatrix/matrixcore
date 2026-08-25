@@ -33,26 +33,12 @@ public class Patcher {
 
             System.out.println("[MatrixCore Patcher] Instrumenting bytecode (Target dir: " + outputPath + ")...");
 
-            /*
-             * EXAMPLE HOOK TEMPLATES:
-             * 
-             * 1. Method Hook Injection (insertBefore / insertAfter):
-             *    CtClass targetClass = pool.get("com.game.MainMIDlet");
-             *    CtMethod startApp = targetClass.getDeclaredMethod("startApp");
-             *    startApp.insertBefore("{ mod.MatrixAPI.init(); }");
-             *    targetClass.writeFile(outputPath);
-             *
-             * 2. Expression Editor Replacement:
-             *    CtMethod updateLoop = targetClass.getDeclaredMethod("update");
-             *    updateLoop.instrument(new ExprEditor() {
-             *        public void edit(MethodCall m) throws CannotCompileException {
-             *            if (m.getMethodName().equals("render")) {
-             *                m.replace("{ $_ = $proceed($$); mod.MatrixAPI.onRender(); }");
-             *            }
-             *        }
-             *    });
-             *    targetClass.writeFile(outputPath);
-             */
+            // Hook game startup in MIDlet (bs.class)
+            CtClass midletClass = pool.get("bs");
+            CtMethod startAppMethod = midletClass.getDeclaredMethod("startApp");
+            startAppMethod.insertBefore("{ mod.MatrixAPI.init(); }");
+            midletClass.writeFile(outputPath);
+            System.out.println("[MatrixCore Patcher] Successfully hooked bs.startApp() -> mod.MatrixAPI.init()");
 
             System.out.println("[MatrixCore Patcher] Bytecode instrumentation completed successfully!");
         } catch (Exception e) {
