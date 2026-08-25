@@ -83,6 +83,17 @@ public class Patcher {
                 System.err.println("[MatrixCore Patcher] Warning: Could not hook bx.a: " + bxEx.getMessage());
             }
 
+            // Bypass Initial Bootscreen & Logo PNG Animation (dj.class) -> Instant transition to Login Window
+            try {
+                CtClass djClass = pool.get("dj");
+                CtMethod djMethod = djClass.getDeclaredMethod("a", new CtClass[0]);
+                djMethod.setBody("{ bq.J = null; bs.c(); dv.a(); bq.b(); bq.G.c(); }");
+                djClass.writeFile(outputPath);
+                System.out.println("[MatrixCore Patcher] Successfully bypassed bootscreen (dj.class) -> Direct to Login Screen!");
+            } catch (Exception djEx) {
+                System.err.println("[MatrixCore Patcher] Warning: Could not bypass bootscreen: " + djEx.getMessage());
+            }
+
             System.out.println("[MatrixCore Patcher] Bytecode instrumentation completed successfully!");
         } catch (Exception e) {
             System.err.println("[MatrixCore Patcher] Patching failed with error:");
