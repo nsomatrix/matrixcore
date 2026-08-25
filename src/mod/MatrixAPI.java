@@ -123,18 +123,29 @@ public class MatrixAPI {
     }
 
     /**
-     * Hook called when a notice or modal dialog text is shown.
-     * Replaces server welcome messages and alerts with "Time to hustle".
+     * Intercepts server notice popups and top banner tickers.
+     * Replaces initial login welcome/advertisement notices with "Time to Hustle!",
+     * while preserving all legitimate in-game global messages (boss spawns, item upgrades, events).
      *
-     * @param noticeText The string message
-     * @return Transformed notice string
+     * @param noticeText The raw notice message string
+     * @return Transformed or sanitized notice string
      */
     public static String transformNoticeText(String noticeText) {
         if (noticeText == null || noticeText.length() == 0) {
             return noticeText;
         }
-        MatrixLogger.info("⚡ [MatrixCore Notice Intercepted]: " + noticeText);
-        return "Time to Hustle!";
+        
+        String lower = noticeText.toLowerCase();
+        // Target login welcome messages or legacy mod branding
+        if (lower.indexOf("nick") >= 0 || lower.indexOf("havan") >= 0 
+            || lower.indexOf("chào mừng") >= 0 || lower.indexOf("welcome") >= 0
+            || lower.indexOf("phần mềm") >= 0 || lower.indexOf("nso.net") >= 0) {
+            MatrixLogger.info("⚡ [MatrixCore Login Notice Intercepted]: " + noticeText);
+            return "Time to Hustle!";
+        }
+        
+        // Preserve standard game global messages (events, boss spawns, item upgrades)
+        return sanitizeText(noticeText);
     }
 
     public static boolean handleNoticeDialog(String noticeText) {
