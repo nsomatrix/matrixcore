@@ -1,7 +1,6 @@
 package patcher;
 
 import javassist.*;
-import javassist.expr.*;
 import java.io.File;
 
 /**

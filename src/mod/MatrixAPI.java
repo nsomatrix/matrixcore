@@ -60,7 +60,7 @@ public class MatrixAPI {
             int newLang = (currentLang == 0) ? 1 : 0;
             
             java.lang.reflect.Method m = faClass.getMethod("a", new Class[]{ int.class });
-            m.invoke(null, new Object[]{ new Integer(newLang) });
+            m.invoke(null, new Object[]{ Integer.valueOf(newLang) });
             MatrixLogger.info("⚡ [MatrixCore] Language toggled to: " + (newLang == 1 ? "English" : "Tiếng Việt"));
         } catch (Throwable t) {
             MatrixLogger.error("Failed to toggle language", t);
@@ -76,7 +76,7 @@ public class MatrixAPI {
         try {
             Class faClass = Class.forName("fa");
             java.lang.reflect.Method m = faClass.getMethod("a", new Class[]{ int.class });
-            m.invoke(null, new Object[]{ new Integer(lang) });
+            m.invoke(null, new Object[]{ Integer.valueOf(lang) });
             MatrixLogger.info("⚡ [MatrixCore] Language switched to: " + (lang == 1 ? "English" : "Tiếng Việt"));
         } catch (Throwable t) {
             MatrixLogger.error("Failed to switch language to " + lang, t);
