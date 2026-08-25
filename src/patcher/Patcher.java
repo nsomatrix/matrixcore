@@ -98,10 +98,10 @@ public class Patcher {
             try {
                 CtClass egClass = pool.get("eg");
                 CtMethod egInitMethod = egClass.getDeclaredMethod("c", new CtClass[0]);
-                egInitMethod.insertAfter("{ this.cq = new au(bq.g ? \"English\" : \"Tiếng Việt\", this, 9998, null); }");
+                egInitMethod.insertAfter("{ this.cq = new au(fa.a == 0 ? \"English\" : \"Tiếng Việt\", this, 9998, null); }");
 
                 CtMethod egActionMethod = egClass.getDeclaredMethod("a", new CtClass[]{ pool.get("int"), pool.get("java.lang.Object") });
-                egActionMethod.insertBefore("if ($1 == 9998) { mod.MatrixAPI.toggleLanguage(); if (this.cq != null) { this.cq.a = bq.g ? \"English\" : \"Tiếng Việt\"; } bq.G.c(); return; }");
+                egActionMethod.insertBefore("if ($1 == 9998) { mod.MatrixAPI.toggleLanguage(); if (this.cq != null) { this.cq.a = (fa.a == 0 ? \"English\" : \"Tiếng Việt\"); } bq.G.c(); return; }");
                 egClass.writeFile(outputPath);
                 System.out.println("[MatrixCore Patcher] Successfully hooked Login Screen (eg.class) with dynamic Language Toggle!");
             } catch (Exception langEx) {
