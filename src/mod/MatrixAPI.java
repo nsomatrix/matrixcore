@@ -20,6 +20,32 @@ public class MatrixAPI {
             initialized = true;
             MatrixLogger.info("⚡ [MatrixCore] Mod Framework Initialized (" + MOD_VERSION + ")");
             cleanServerNames();
+            loadCustomLogo();
+        }
+    }
+
+    /**
+     * Loads the custom MatrixCore logo PNG from /matrix_logo.png into cr.a via reflection
+     */
+    public static void loadCustomLogo() {
+        try {
+            java.io.InputStream is = "".getClass().getResourceAsStream("/matrix_logo.png");
+            if (is != null) {
+                javax.microedition.lcdui.Image logo = javax.microedition.lcdui.Image.createImage(is);
+                if (logo != null) {
+                    try {
+                        Class crClass = Class.forName("cr");
+                        java.lang.reflect.Field field = crClass.getField("a");
+                        field.set(null, logo);
+                        MatrixLogger.info("⚡ [MatrixCore] Custom logo loaded (" + logo.getWidth() + "x" + logo.getHeight() + ")");
+                    } catch (Throwable refErr) {
+                        MatrixLogger.error("Failed reflection set cr.a", refErr);
+                    }
+                }
+                is.close();
+            }
+        } catch (Throwable t) {
+            MatrixLogger.error("Failed to load /matrix_logo.png", t);
         }
     }
 

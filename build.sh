@@ -71,6 +71,14 @@ cd "$BUILD_DIR/mod_classes"
 zip -u -r "$DIST_JAR" mod/ > /dev/null
 cd "$BASE_DIR"
 
+# Add custom logo resource to JAR
+if [ -f "$SRC_DIR/logo/matrix_logo.png" ]; then
+    cp "$SRC_DIR/logo/matrix_logo.png" "$BUILD_DIR/matrix_logo.png"
+    cd "$BUILD_DIR"
+    zip -u -r "$DIST_JAR" matrix_logo.png > /dev/null
+    cd "$BASE_DIR"
+fi
+
 # Update JAR Manifest metadata to MatrixCore
 mkdir -p "$BUILD_DIR/META-INF"
 cat << 'EOF' > "$BUILD_DIR/META-INF/MANIFEST.MF"

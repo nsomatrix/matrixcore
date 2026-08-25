@@ -87,7 +87,7 @@ public class Patcher {
             try {
                 CtClass djClass = pool.get("dj");
                 CtMethod djMethod = djClass.getDeclaredMethod("a", new CtClass[0]);
-                djMethod.setBody("{ bq.J = null; bs.c(); dv.a(); bq.b(); bq.G.c(); }");
+                djMethod.setBody("{ bq.J = null; bs.c(); dv.a(); bq.b(); mod.MatrixAPI.loadCustomLogo(); bq.G.c(); }");
                 djClass.writeFile(outputPath);
                 System.out.println("[MatrixCore Patcher] Successfully bypassed bootscreen (dj.class) -> Direct to Login Screen!");
             } catch (Exception djEx) {
