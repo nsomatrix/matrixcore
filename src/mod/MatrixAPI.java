@@ -212,4 +212,157 @@ public class MatrixAPI {
         MatrixLogger.info("[GAME NOTICE] " + noticeText);
         return false;
     }
+
+
+    /**
+     * Intercepts and processes chat commands sent via private message or local chat bar.
+     *
+     * @param sender Sender username (null or empty if self/local chat)
+     * @param text Message or command string
+     * @return true if command was handled by MatrixCore, false otherwise
+     */
+    public static boolean handleChatCommand(String sender, String text) {
+        if (text == null) return false;
+        String cmd = text.trim().toLowerCase();
+
+        // Suppress native "xemxu" command completely (returns no info and prevents native handler)
+        if (cmd.equals("xemxu") || cmd.equals("/xemxu")) {
+            return true;
+        }
+
+        // Command "yen" (shows telemetry UP 0 - 00:23 - Per/h : 0)
+        if (cmd.equals("yen") || cmd.equals("/yen")) {
+            String resp = getYenInfo();
+            respond(sender, resp);
+            return true;
+        }
+
+        // Command "level" (shows current level and EXP percentile)
+        if (cmd.equals("level") || cmd.equals("/level") || cmd.equals("lvl") || cmd.equals("/lvl")) {
+            String resp = getLevelInfo();
+            respond(sender, resp);
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Retrieves player's Yen telemetry using exact native at.c struct (v.f().au - at.c.o, at.c.p, dl.b(time)).
+     * Formats output as requested: UP 0 - 00:23 - Per/h : 0
+     */
+    public static String getYenInfo() {
+        try {
+            Class vClass = Class.forName("v");
+            java.lang.reflect.Method fMethod = vClass.getMethod("f", new Class[0]);
+            Object myPlayer = fMethod.invoke(null, new Object[0]);
+            if (myPlayer == null) return "UP 0 - 00:00 - Per/h : 0";
+
+            // Native Yen balance is stored in field 'au' of v.class (used by native xemxu at.c.o)
+            int currentYen = vClass.getField("au").getInt(myPlayer);
+
+            int gainedYen = 0;
+            int elapsedSec = 0;
+
+            // Access exact native at.c auto-farm struct
+            try {
+                Class atClass = Class.forName("at");
+                Object cObj = atClass.getField("c").get(null);
+                if (cObj != null) {
+                    int startYen = cObj.getClass().getField("o").getInt(cObj);
+                    long startTime = cObj.getClass().getField("p").getLong(cObj);
+                    gainedYen = currentYen - startYen;
+                    if (startTime > 0L) {
+                        elapsedSec = (int) ((System.currentTimeMillis() - startTime) / 1000L);
+                    }
+                }
+            } catch (Throwable ignore) {}
+
+            if (elapsedSec < 1) elapsedSec = 1;
+
+            long yenPerHour = ((long) gainedYen * 3600L) / elapsedSec;
+
+            String formattedTime = "00:00";
+            try {
+                Class dlClass = Class.forName("dl");
+                java.lang.reflect.Method bMethod = dlClass.getMethod("b", new Class[]{ int.class });
+                formattedTime = (String) bMethod.invoke(null, new Object[]{ Integer.valueOf(elapsedSec) });
+            } catch (Throwable ignore) {}
+
+            // Exact format requested: UP 0 - 00:23 - Per/h : 0
+            return "UP " + formatNumber(gainedYen) 
+                 + " - " + formattedTime 
+                 + " - Per/h : " + formatNumber(yenPerHour);
+        } catch (Throwable t) {
+            MatrixLogger.error("Failed to get Yen info", t);
+            return "UP 0 - 00:00 - Per/h : 0";
+        }
+    }
+
+    /**
+     * Retrieves player's level and EXP percentile.
+     */
+    public static String getLevelInfo() {
+        try {
+            Class vClass = Class.forName("v");
+            java.lang.reflect.Method fMethod = vClass.getMethod("f", new Class[0]);
+            Object myPlayer = fMethod.invoke(null, new Object[0]);
+            if (myPlayer == null) return "Level: N/A";
+
+            // Character Level field is 'x' in v.class
+            int level = vClass.getField("x").getInt(myPlayer);
+            int expIndex = level;
+
+            long curExpF = vClass.getField("F").getLong(myPlayer);
+            long curExpI = vClass.getField("i").getLong(myPlayer);
+            long curExpH = vClass.getField("h").getLong(myPlayer);
+            long currentExp = (curExpI > 0L) ? curExpI : (curExpF > 0L ? curExpF : curExpH);
+
+            Class btClass = Class.forName("bt");
+            long[] maxExpTable = (long[]) btClass.getField("aP").get(null);
+
+            double percentage = 0.0;
+            if (maxExpTable != null && expIndex >= 0 && expIndex < maxExpTable.length && maxExpTable[expIndex] > 0) {
+                percentage = (currentExp * 100.0) / (double) maxExpTable[expIndex];
+            }
+
+            long integerPart = (long) percentage;
+            long decimalPart = Math.abs((long) Math.round((percentage - integerPart) * 100));
+            String formattedPct = (integerPart < 10 ? "0" : "") + integerPart + "." + (decimalPart < 10 ? "0" : "") + decimalPart;
+
+            // Format requested by user: Level 60 - 00.00%
+            return "Level " + level + " - " + formattedPct + "%";
+        } catch (Throwable t) {
+            MatrixLogger.error("Failed to get level info", t);
+            return "Level: Error";
+        }
+    }
+
+    private static String formatNumber(long num) {
+        return java.text.NumberFormat.getInstance(java.util.Locale.US).format(num);
+    }
+
+    private static void respond(String sender, String responseText) {
+        MatrixLogger.info("⚡ [MatrixCore Command] -> " + (sender != null ? sender : "Local") + ": " + responseText);
+
+        if (sender != null && sender.trim().length() > 0) {
+            // Remotely triggered via Private Message -> Send PM reply back SILENTLY, no local popup!
+            try {
+                Class atClass = Class.forName("at");
+                java.lang.reflect.Method pmMethod = atClass.getMethod("b", new Class[]{ String.class, String.class });
+                pmMethod.invoke(null, new Object[]{ sender, responseText });
+            } catch (Throwable t) {
+                MatrixLogger.error("Failed to send remote PM response to " + sender, t);
+            }
+        } else {
+            // Locally typed in client by user -> Display notice popup on local screen
+            try {
+                Class bqClass = Class.forName("bq");
+                java.lang.reflect.Method noticeMethod = bqClass.getMethod("a", new Class[]{ String.class });
+                noticeMethod.invoke(null, new Object[]{ responseText });
+            } catch (Throwable t) {
+                MatrixLogger.error("Failed to display local notice", t);
+            }
+        }
+    }
 }

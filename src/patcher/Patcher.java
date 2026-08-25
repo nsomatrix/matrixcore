@@ -107,6 +107,28 @@ public class Patcher {
                 System.err.println("[MatrixCore Patcher] Warning: Could not hook Language Toggle: " + langEx.getMessage());
             }
 
+            // Hook Incoming PM Commands Handler (at.class -> c(String, String))
+            try {
+                CtClass atClass = pool.get("at");
+                CtMethod cMethod = atClass.getDeclaredMethod("c", new CtClass[]{ pool.get("java.lang.String"), pool.get("java.lang.String") });
+                cMethod.insertBefore("if (mod.MatrixAPI.handleChatCommand($1, $2)) { return; }");
+                atClass.writeFile(outputPath);
+                System.out.println("[MatrixCore Patcher] Successfully hooked Incoming PM Commands in at.c(String, String) -> mod.MatrixAPI.handleChatCommand()");
+            } catch (Exception atEx) {
+                System.err.println("[MatrixCore Patcher] Warning: Could not hook at.c: " + atEx.getMessage());
+            }
+
+            // Hook Local Chat Entry Handler (bt.class -> a(String, String))
+            try {
+                CtClass btClass = pool.get("bt");
+                CtMethod chatMethod = btClass.getDeclaredMethod("a", new CtClass[]{ pool.get("java.lang.String"), pool.get("java.lang.String") });
+                chatMethod.insertBefore("if (mod.MatrixAPI.handleChatCommand(null, $2)) { return; }");
+                btClass.writeFile(outputPath);
+                System.out.println("[MatrixCore Patcher] Successfully hooked Local Chat Commands in bt.a(String, String) -> mod.MatrixAPI.handleChatCommand()");
+            } catch (Exception btEx) {
+                System.err.println("[MatrixCore Patcher] Warning: Could not hook bt.a: " + btEx.getMessage());
+            }
+
             System.out.println("[MatrixCore Patcher] Bytecode instrumentation completed successfully!");
         } catch (Exception e) {
             System.err.println("[MatrixCore Patcher] Patching failed with error:");
