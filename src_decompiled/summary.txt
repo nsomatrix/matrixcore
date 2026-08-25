@@ -1,0 +1,80 @@
+Summary for /home/manish/projects/matrixcore/input/nso.jar
+Decompiled with CFR 0.152
+
+
+at
+----------------------------
+
+i()
+  Unable to fully structure code
+
+
+fb
+----------------------------
+
+a(fh )
+  Unable to fully structure code
+k(int )
+  Exception : org.benf.cfr.reader.util.ConfusedCFRException: Tried to end blocks [0[TRYBLOCK]], but top level block is 23[WHILELOOP]
+
+
+v
+----------------------------
+
+am()
+  Unable to fully structure code
+
+
+bf
+----------------------------
+
+a()
+  Unable to fully structure code
+
+
+bt
+----------------------------
+
+d()
+  Unable to fully structure code
+b(boolean )
+  Unable to fully structure code
+b(fh java.lang.String[] )
+  Unable to fully structure code
+r(fh )
+  Unable to fully structure code
+bH()
+  Unable to fully structure code
+
+
+cx
+----------------------------
+
+a()
+  Unable to fully structure code
+
+
+bx
+----------------------------
+
+a(java.lang.String int fg )
+  Unable to fully structure code
+
+
+av
+----------------------------
+
+a(aj )
+  Unable to fully structure code
+  Could not resolve type clashes
+e(aj )
+  Exception : org.benf.cfr.reader.util.ConfusedCFRException: Tried to end blocks [30[CASE]], but top level block is 11[TRYBLOCK]
+g(aj )
+  Exception : org.benf.cfr.reader.util.ConfusedCFRException: Tried to end blocks [0[TRYBLOCK]], but top level block is 100[SWITCH]
+
+
+dm
+----------------------------
+
+j()
+  Unable to fully structure code

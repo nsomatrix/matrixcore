@@ -1,0 +1,14 @@
+# MatrixCore Build Outputs
+build_output/
+dist/
+
+# IDE files
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+
+# Temporary files
+*.tmp
+*.log
