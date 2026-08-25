@@ -50,6 +50,40 @@ public class MatrixAPI {
     }
 
     /**
+     * Dynamically toggles game language via reflection between Vietnamese (0) and English (1).
+     */
+    public static void toggleLanguage() {
+        try {
+            Class faClass = Class.forName("fa");
+            java.lang.reflect.Field field = faClass.getField("a");
+            int currentLang = field.getInt(null);
+            int newLang = (currentLang == 0) ? 1 : 0;
+            
+            java.lang.reflect.Method m = faClass.getMethod("a", new Class[]{ int.class });
+            m.invoke(null, new Object[]{ new Integer(newLang) });
+            MatrixLogger.info("⚡ [MatrixCore] Language toggled to: " + (newLang == 1 ? "English" : "Tiếng Việt"));
+        } catch (Throwable t) {
+            MatrixLogger.error("Failed to toggle language", t);
+        }
+    }
+
+    /**
+     * Dynamically switches game language via reflection:
+     * 0 = Vietnamese (Tiếng Việt) - Default
+     * 1 = English
+     */
+    public static void setLanguage(int lang) {
+        try {
+            Class faClass = Class.forName("fa");
+            java.lang.reflect.Method m = faClass.getMethod("a", new Class[]{ int.class });
+            m.invoke(null, new Object[]{ new Integer(lang) });
+            MatrixLogger.info("⚡ [MatrixCore] Language switched to: " + (lang == 1 ? "English" : "Tiếng Việt"));
+        } catch (Throwable t) {
+            MatrixLogger.error("Failed to switch language to " + lang, t);
+        }
+    }
+
+    /**
      * Sanitizes strings rendered by the game font engine or UI components,
      * replacing legacy branding (e.g. Nicknso, Nicknsonet, Havan) with MatrixCore.
      */
