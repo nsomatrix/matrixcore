@@ -71,6 +71,21 @@ cd "$BUILD_DIR/mod_classes"
 zip -u -r "$DIST_JAR" mod/ > /dev/null
 cd "$BASE_DIR"
 
+# Update JAR Manifest metadata to MatrixCore
+mkdir -p "$BUILD_DIR/META-INF"
+cat << 'EOF' > "$BUILD_DIR/META-INF/MANIFEST.MF"
+Manifest-Version: 1.0
+MIDlet-1: MatrixCore,/icon.png,bs
+MIDlet-Vendor: MatrixCore
+MicroEdition-Configuration: CLDC-1.0
+MIDlet-Name: MatrixCore
+MIDlet-Version: 1.0.0
+MicroEdition-Profile: MIDP-2.0
+EOF
+cd "$BUILD_DIR"
+zip -u -r "$DIST_JAR" META-INF/MANIFEST.MF > /dev/null
+cd "$BASE_DIR"
+
 echo "=================================================="
 echo " ✅ BUILD SUCCESSFUL!"
 echo " 📁 Output File: $DIST_JAR"

@@ -40,6 +40,49 @@ public class Patcher {
             midletClass.writeFile(outputPath);
             System.out.println("[MatrixCore Patcher] Successfully hooked bs.startApp() -> mod.MatrixAPI.init()");
 
+            // Hook Font Renderer (fg.class) to sanitize all rendered text on screen
+            try {
+                CtClass fontClass = pool.get("fg");
+                CtMethod[] methods = fontClass.getDeclaredMethods();
+                int hookedCount = 0;
+                for (int i = 0; i < methods.length; i++) {
+                    CtMethod m = methods[i];
+                    if ("a".equals(m.getName())) {
+                        CtClass[] params = m.getParameterTypes();
+                        if (params.length >= 2 && "java.lang.String".equals(params[1].getName())) {
+                            m.insertBefore("{ $2 = mod.MatrixAPI.sanitizeText($2); }");
+                            hookedCount++;
+                        }
+                    }
+                }
+                fontClass.writeFile(outputPath);
+                System.out.println("[MatrixCore Patcher] Successfully hooked " + hookedCount + " text drawing methods in fg.class -> mod.MatrixAPI.sanitizeText()");
+            } catch (Exception fontEx) {
+                System.err.println("[MatrixCore Patcher] Warning: Could not hook fg.class: " + fontEx.getMessage());
+            }
+
+            // Hook Popup Notice Dialog (bq.class)
+            try {
+                CtClass bqClass = pool.get("bq");
+                CtMethod noticeMethod = bqClass.getDeclaredMethod("a", new CtClass[]{ pool.get("java.lang.String") });
+                noticeMethod.insertBefore("{ $1 = mod.MatrixAPI.transformNoticeText($1); }");
+                bqClass.writeFile(outputPath);
+                System.out.println("[MatrixCore Patcher] Successfully hooked bq.a(String) -> mod.MatrixAPI.transformNoticeText()");
+            } catch (Exception bqEx) {
+                System.err.println("[MatrixCore Patcher] Warning: Could not hook bq.a: " + bqEx.getMessage());
+            }
+
+            // Hook Top Ticker Banner (bx.class)
+            try {
+                CtClass bxClass = pool.get("bx");
+                CtMethod tickerMethod = bxClass.getDeclaredMethod("a", new CtClass[]{ pool.get("java.lang.String"), pool.get("int"), pool.get("fg") });
+                tickerMethod.insertBefore("{ $1 = mod.MatrixAPI.transformNoticeText($1); }");
+                bxClass.writeFile(outputPath);
+                System.out.println("[MatrixCore Patcher] Successfully hooked bx.a(String, int, fg) -> mod.MatrixAPI.transformNoticeText()");
+            } catch (Exception bxEx) {
+                System.err.println("[MatrixCore Patcher] Warning: Could not hook bx.a: " + bxEx.getMessage());
+            }
+
             System.out.println("[MatrixCore Patcher] Bytecode instrumentation completed successfully!");
         } catch (Exception e) {
             System.err.println("[MatrixCore Patcher] Patching failed with error:");

@@ -19,6 +19,53 @@ public class MatrixAPI {
         if (!initialized) {
             initialized = true;
             MatrixLogger.info("⚡ [MatrixCore] Mod Framework Initialized (" + MOD_VERSION + ")");
+            cleanServerNames();
+        }
+    }
+
+    /**
+     * Sanitizes strings rendered by the game font engine or UI components,
+     * replacing legacy branding (e.g. Nicknso, Nicknsonet, Havan) with MatrixCore.
+     */
+    public static String sanitizeText(String text) {
+        if (text == null || text.length() == 0) {
+            return text;
+        }
+        
+        String lower = text.toLowerCase();
+        if (lower.indexOf("nick") >= 0 || lower.indexOf("havan") >= 0) {
+            text = replaceIgnoreCase(text, "nicknsonet", "MatrixCore");
+            text = replaceIgnoreCase(text, "nicknso.net", "MatrixCore");
+            text = replaceIgnoreCase(text, "nicknso", "MatrixCore");
+            text = replaceIgnoreCase(text, "havan", "MatrixCore");
+        }
+        return text;
+    }
+
+    private static String replaceIgnoreCase(String src, String target, String replacement) {
+        if (src == null || target == null || replacement == null) return src;
+        int idx = src.toLowerCase().indexOf(target.toLowerCase());
+        if (idx >= 0) {
+            return src.substring(0, idx) + replacement + src.substring(idx + target.length());
+        }
+        return src;
+    }
+
+    public static void cleanServerNames() {
+        try {
+            Class bsClass = Class.forName("bs");
+            java.lang.reflect.Field fField = bsClass.getDeclaredField("f");
+            fField.setAccessible(true);
+            String[] f = (String[]) fField.get(null);
+            if (f != null && f.length > 0) {
+                for (int i = 0; i < f.length; i++) {
+                    if (f[i] != null && f[i].toLowerCase().indexOf("nick") >= 0) {
+                        f[i] = "MatrixCore";
+                    }
+                }
+            }
+        } catch (Throwable t) {
+            // Ignore
         }
     }
 
@@ -77,10 +124,19 @@ public class MatrixAPI {
 
     /**
      * Hook called when a notice or modal dialog text is shown.
+     * Replaces server welcome messages and alerts with "Time to hustle".
      *
      * @param noticeText The string message
-     * @return true if intercepted
+     * @return Transformed notice string
      */
+    public static String transformNoticeText(String noticeText) {
+        if (noticeText == null || noticeText.length() == 0) {
+            return noticeText;
+        }
+        MatrixLogger.info("⚡ [MatrixCore Notice Intercepted]: " + noticeText);
+        return "Time to Hustle!";
+    }
+
     public static boolean handleNoticeDialog(String noticeText) {
         MatrixLogger.info("[GAME NOTICE] " + noticeText);
         return false;
